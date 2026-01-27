@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -5,33 +6,28 @@
   <groupId>poc</groupId>
   <artifactId>astradb-liquibase-cql-poc</artifactId>
   <version>1.0.0</version>
+  <packaging>pom</packaging>
 
   <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <liquibase.version>4.31.0</liquibase.version>
-    <liquibase.cassandra.ext.version>5.0.1</liquibase.cassandra.ext.version>
-    <cassandra.jdbc.wrapper.version>4.16.1</cassandra.jdbc.wrapper.version>
   </properties>
 
   <dependencies>
-    <!-- Liquibase core -->
+    <!-- Liquibase Core -->
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
       <version>${liquibase.version}</version>
     </dependency>
 
-    <!-- Liquibase Cassandra extension -->
+    <!-- DataStax Astra JDBC Driver (handles SCB + CQL perfectly) -->
     <dependency>
-      <groupId>org.liquibase.ext</groupId>
-      <artifactId>liquibase-cassandra</artifactId>
-      <version>${liquibase.cassandra.ext.version}</version>
-    </dependency>
-
-    <!-- Cassandra JDBC wrapper (used by the Liquibase Cassandra extension for Astra) -->
-    <dependency>
-      <groupId>com.ing.data</groupId>
-      <artifactId>cassandra-jdbc-wrapper</artifactId>
-      <version>${cassandra.jdbc.wrapper.version}</version>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>astra-db-driver</artifactId>
+      <version>1.29.4</version>
     </dependency>
   </dependencies>
 
@@ -41,6 +37,16 @@
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-maven-plugin</artifactId>
         <version>${liquibase.version}</version>
+        <configuration>
+          <driver>com.datastax.astra.driver.jdbc.AstraDriver</driver>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>astra-db-driver</artifactId>
+            <version>1.29.4</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>

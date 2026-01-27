@@ -7,15 +7,35 @@ on:
       - "liquibase/**"
       - "pom.xml"
       - ".github/workflows/liquibase.yml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "liquibase/**"
+      - "pom.xml"
   workflow_dispatch:
 
 concurrency:
-  group: astradb-liquibase-${{ github.ref }}
+  group: astradb-liquibase-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
-  update:
+  validate:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate keyspace
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+        run: |
+          echo "Keyspace: ${ASTRA_DB_KEYSPACE}"
+          [[ -n "${ASTRA_DB_KEYSPACE}" ]] || exit 1
+          [[ "${ASTRA_DB_KEYSPACE}" =~ ^[A-Za-z0-9_]+$ ]] || exit 1
+
+  migrate:
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -24,58 +44,51 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: maven
 
-      - name: Validate keyspace format
-        shell: bash
+      - name: Setup Secure Connect Bundle
         env:
-          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_SCB_BASE64: ${{ secrets.ASTRA_DB_BASE64 }}
         run: |
-          set -euo pipefail
-          echo "Keyspace: '${ASTRA_DB_KEYSPACE}'"
-          if [[ -z "${ASTRA_DB_KEYSPACE}" ]]; then
-            echo "ERROR: ASTRA_DB_KEYSPACE is empty" && exit 1
-          fi
-          if [[ ! "${ASTRA_DB_KEYSPACE}" =~ ^[A-Za-z0-9_]+$ ]]; then
-            echo "ERROR: Keyspace must be alphanumerics/underscore only." && exit 1
-          fi
-
-      - name: Recreate Secure Connect Bundle
-        shell: bash
-        env:
-          ASTRA_SCB_BASE64: ${{ secrets.ASTRA_SCB_BASE64 }}
-        run: |
-          set -euo pipefail
           mkdir -p .astra
-          echo "$ASTRA_SCB_BASE64" | base64 -d > .astra/secure-connect.zip
-          ls -la .astra/secure-connect.zip
+          echo "${ASTRA_SCB_BASE64}" | base64 -d > .astra/secure-connect.zip
+          unzip -l .astra/secure-connect.zip
 
-      - name: Liquibase release locks (PoC safety)
-        shell: bash
-        env:
-            ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-            ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
-        run: |
-            set -euo pipefail
-            mvn -q -DskipTests liquibase:releaseLocks \
-              -Dliquibase.changeLogFile=liquibase/changelog.sql \
-              -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
-              -Dliquibase.username=token \
-              -Dliquibase.password="${ASTRA_DB_TOKEN}" || true \
-              -Dliquibase.cassandra.locking=false
-
-      - name: Liquibase update (apply changes)
-        shell: bash
+      - name: Liquibase STATUS (check lock)
         env:
           ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
           ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
-          set -euo pipefail
-
-          mvn -B -e -DskipTests --no-transfer-progress liquibase:update \
+          mvn liquibase:status \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.logLevel=info \
-            -Dliquibase.cassandra.locking=false
+            -Dliquibase.logLevel=warn \
+            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver
 
+      - name: Force release locks (safety)
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+        run: |
+          mvn liquibase:releaseLocks \
+            -Dliquibase.changeLogFile=liquibase/changelog.sql \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.username=token \
+            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
+            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver || true
+
+      - name: Liquibase UPDATE (deploy)
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+        run: |
+          mvn liquibase:update \
+            -Dliquibase.changeLogFile=liquibase/changelog.sql \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.username=token \
+            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
+            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver \
+            -Dliquibase.logLevel=info \
+            -Dliquibase.command.timeout=300
