@@ -61,11 +61,10 @@ jobs:
         run: |
           mvn liquibase:status \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.logLevel=warn \
-            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver
+            -Dliquibase.logLevel=warn
 
       - name: Force release locks (safety)
         env:
@@ -86,9 +85,7 @@ jobs:
         run: |
           mvn liquibase:update \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver \
-            -Dliquibase.logLevel=info \
-            -Dliquibase.command.timeout=300
+            -Dliquibase.logLevel=info

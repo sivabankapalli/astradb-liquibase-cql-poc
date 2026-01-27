@@ -13,7 +13,21 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <liquibase.version>4.31.0</liquibase.version>
+    <java-driver.version>4.18.1</java-driver.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- DataStax OSS Java Driver (Astra compatible) -->
+      <dependency>
+        <groupId>com.datastax.oss</groupId>
+        <artifactId>java-driver-bom</artifactId>
+        <version>${java-driver.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Liquibase Core -->
@@ -23,28 +37,34 @@
       <version>${liquibase.version}</version>
     </dependency>
 
-    <!-- DataStax Astra JDBC Driver (handles SCB + CQL perfectly) -->
+    <!-- DataStax Java Driver Core (handles Astra SCB) -->
     <dependency>
       <groupId>com.datastax.oss</groupId>
-      <artifactId>astra-db-driver</artifactId>
-      <version>1.29.4</version>
+      <artifactId>java-driver-core</artifactId>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-maven-plugin</artifactId>
         <version>${liquibase.version}</version>
         <configuration>
-          <driver>com.datastax.astra.driver.jdbc.AstraDriver</driver>
+          <!-- Astra uses java-driver under the hood -->
+          <driver>com.datastax.oss.driver.internal.core.metadata.DefaultKeyspaceMetadata</driver>
         </configuration>
         <dependencies>
+          <!-- Include driver in plugin classpath -->
           <dependency>
             <groupId>com.datastax.oss</groupId>
-            <artifactId>astra-db-driver</artifactId>
-            <version>1.29.4</version>
+            <artifactId>java-driver-core</artifactId>
+            <version>${java-driver.version}</version>
           </dependency>
         </dependencies>
       </plugin>
