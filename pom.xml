@@ -13,21 +13,8 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <liquibase.version>4.31.0</liquibase.version>
-    <java-driver.version>4.18.1</java-driver.version>
+    <cassandra-jdbc.version>4.16.1</cassandra-jdbc.version>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- DataStax OSS Java Driver (Astra compatible) -->
-      <dependency>
-        <groupId>com.datastax.oss</groupId>
-        <artifactId>java-driver-bom</artifactId>
-        <version>${java-driver.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <!-- Liquibase Core -->
@@ -37,10 +24,11 @@
       <version>${liquibase.version}</version>
     </dependency>
 
-    <!-- DataStax Java Driver Core (handles Astra SCB) -->
+    <!-- Cassandra JDBC Wrapper (Maven Central, Astra compatible) -->
     <dependency>
-      <groupId>com.datastax.oss</groupId>
-      <artifactId>java-driver-core</artifactId>
+      <groupId>com.ing.data</groupId>
+      <artifactId>cassandra-jdbc-wrapper</artifactId>
+      <version>${cassandra-jdbc.version}</version>
     </dependency>
   </dependencies>
 
@@ -56,15 +44,13 @@
         <artifactId>liquibase-maven-plugin</artifactId>
         <version>${liquibase.version}</version>
         <configuration>
-          <!-- Astra uses java-driver under the hood -->
-          <driver>com.datastax.oss.driver.internal.core.metadata.DefaultKeyspaceMetadata</driver>
+          <driver>com.ing.data.cassandra.jdbc.CassandraDriver</driver>
         </configuration>
         <dependencies>
-          <!-- Include driver in plugin classpath -->
           <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-core</artifactId>
-            <version>${java-driver.version}</version>
+            <groupId>com.ing.data</groupId>
+            <artifactId>cassandra-jdbc-wrapper</artifactId>
+            <version>${cassandra-jdbc.version}</version>
           </dependency>
         </dependencies>
       </plugin>

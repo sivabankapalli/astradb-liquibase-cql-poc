@@ -61,31 +61,27 @@ jobs:
         run: |
           mvn liquibase:status \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
             -Dliquibase.logLevel=warn
 
       - name: Force release locks (safety)
-        env:
-          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+        # ... same env
         run: |
           mvn liquibase:releaseLocks \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
-            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.system.driver=com.datastax.astra.driver.jdbc.AstraDriver || true
+            -Dliquibase.password="${ASTRA_DB_TOKEN}" || true
 
       - name: Liquibase UPDATE (deploy)
-        env:
-          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+        # ... same env  
         run: |
           mvn liquibase:update \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureConnectBundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
             -Dliquibase.logLevel=info
+
