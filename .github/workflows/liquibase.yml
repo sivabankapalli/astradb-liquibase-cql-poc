@@ -61,27 +61,30 @@ jobs:
         run: |
           mvn liquibase:status \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.logLevel=warn
+            -Dliquibase.logLevel=WARNING  # UPPERCASE!
 
       - name: Force release locks (safety)
-        # ... same env
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:releaseLocks \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}" || true
 
       - name: Liquibase UPDATE (deploy)
-        # ... same env  
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:update \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
             -Dliquibase.username=token \
-            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.logLevel=info
+            -Dliquibase.password="${ASTRA_DB_TOKEN}"
 
