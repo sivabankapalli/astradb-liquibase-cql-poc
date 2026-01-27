@@ -1,4 +1,4 @@
---liquibase formatted cql
+--liquibase formatted sql
 
 --changeset poc:1-create-customer-table splitStatements:false context:prod
 CREATE TABLE IF NOT EXISTS customer1 (

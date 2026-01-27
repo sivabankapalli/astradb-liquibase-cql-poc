@@ -60,7 +60,7 @@ jobs:
           ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:status \
-            -Dliquibase.changeLogFile=liquibase/changelog.cql \
+            -Dliquibase.changeLogFile=liquibase/changelog.sql \
             -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}"
@@ -71,7 +71,7 @@ jobs:
           ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:update \
-            -Dliquibase.changeLogFile=liquibase/changelog.cql \
+            -Dliquibase.changeLogFile=liquibase/changelog.sql \
             -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}"
