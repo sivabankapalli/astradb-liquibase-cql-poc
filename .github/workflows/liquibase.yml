@@ -9,6 +9,10 @@ on:
       - ".github/workflows/liquibase.yml"
   workflow_dispatch:
 
+concurrency:
+  group: astradb-liquibase-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -45,16 +49,29 @@ jobs:
           echo "$ASTRA_SCB_BASE64" | base64 -d > .astra/secure-connect.zip
           ls -la .astra/secure-connect.zip
 
+      - name: Liquibase release locks (PoC safety)
+        shell: bash
+        env:
+            ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+            ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+        run: |
+            set -euo pipefail
+            mvn -q -DskipTests liquibase:releaseLocks \
+              -Dliquibase.changeLogFile=liquibase/changelog.sql \
+              -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
+              -Dliquibase.username=token \
+              -Dliquibase.password="${ASTRA_DB_TOKEN}" || true
+
+
       - name: Liquibase update (apply changes)
         shell: bash
         env:
-          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+            ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+            ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
-          set -euo pipefail
-
-          mvn -q -DskipTests liquibase:update \
-            -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
-            -Dliquibase.username=token \
-            -Dliquibase.password="${ASTRA_DB_TOKEN}"
+            set -euo pipefail
+            mvn -q -DskipTests liquibase:update \
+              -Dliquibase.changeLogFile=liquibase/changelog.sql \
+              -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
+              -Dliquibase.username=token \
+              -Dliquibase.password="${ASTRA_DB_TOKEN}"
