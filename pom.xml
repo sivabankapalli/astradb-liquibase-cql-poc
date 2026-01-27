@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>poc</groupId>
+  <artifactId>astradb-liquibase-cql-poc</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <liquibase.version>4.31.0</liquibase.version>
+    <liquibase.cassandra.ext.version>5.0.1</liquibase.cassandra.ext.version>
+    <cassandra.jdbc.wrapper.version>4.16.1</cassandra.jdbc.wrapper.version>
+  </properties>
+
+  <dependencies>
+    <!-- Liquibase core -->
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+      <version>${liquibase.version}</version>
+    </dependency>
+
+    <!-- Liquibase Cassandra extension -->
+    <dependency>
+      <groupId>org.liquibase.ext</groupId>
+      <artifactId>liquibase-cassandra</artifactId>
+      <version>${liquibase.cassandra.ext.version}</version>
+    </dependency>
+
+    <!-- Cassandra JDBC wrapper (used by the Liquibase Cassandra extension for Astra) -->
+    <dependency>
+      <groupId>com.ing.data</groupId>
+      <artifactId>cassandra-jdbc-wrapper</artifactId>
+      <version>${cassandra.jdbc.wrapper.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-maven-plugin</artifactId>
+        <version>${liquibase.version}</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
