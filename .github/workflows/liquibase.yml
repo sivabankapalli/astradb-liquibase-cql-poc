@@ -60,7 +60,7 @@ jobs:
               -Dliquibase.changeLogFile=liquibase/changelog.sql \
               -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
               -Dliquibase.username=token \
-              -Dliquibase.password="${ASTRA_DB_TOKEN}" || true
+              -Dliquibase.password="${ASTRA_DB_TOKEN}" || true \
               -Dliquibase.cassandra.locking=false
 
       - name: Liquibase update (apply changes)
