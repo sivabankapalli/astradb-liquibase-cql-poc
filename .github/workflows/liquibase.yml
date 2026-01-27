@@ -70,8 +70,10 @@ jobs:
             ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
             set -euo pipefail
-            mvn -q -DskipTests liquibase:update \
+
+            mvn -B -e -DskipTests --no-transfer-progress liquibase:update \
               -Dliquibase.changeLogFile=liquibase/changelog.sql \
               -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
               -Dliquibase.username=token \
-              -Dliquibase.password="${ASTRA_DB_TOKEN}"
+              -Dliquibase.password="${ASTRA_DB_TOKEN}" \
+              -Dliquibase.logLevel=info
