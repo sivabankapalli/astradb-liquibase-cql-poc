@@ -60,22 +60,10 @@ jobs:
           ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:status \
-            -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
+            -Dliquibase.changeLogFile=liquibase/changelog.cql \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
-            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-            -Dliquibase.logLevel=WARNING  # UPPERCASE!
-
-      - name: Force release locks (safety)
-        env:
-          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
-        run: |
-          mvn liquibase:releaseLocks \
-            -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
-            -Dliquibase.username=token \
-            -Dliquibase.password="${ASTRA_DB_TOKEN}" || true
+            -Dliquibase.password="${ASTRA_DB_TOKEN}"
 
       - name: Liquibase UPDATE (deploy)
         env:
@@ -83,8 +71,9 @@ jobs:
           ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
           mvn liquibase:update \
-            -Dliquibase.changeLogFile=liquibase/changelog.sql \
-            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&compliancemode=Liquibase" \
+            -Dliquibase.changeLogFile=liquibase/changelog.cql \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip" \
             -Dliquibase.username=token \
             -Dliquibase.password="${ASTRA_DB_TOKEN}"
+
 
