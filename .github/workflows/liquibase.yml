@@ -12,7 +12,6 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +20,20 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Validate keyspace format
+        shell: bash
+        env:
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+        run: |
+          set -euo pipefail
+          echo "Keyspace: '${ASTRA_DB_KEYSPACE}'"
+          if [[ -z "${ASTRA_DB_KEYSPACE}" ]]; then
+            echo "ERROR: ASTRA_DB_KEYSPACE is empty" && exit 1
+          fi
+          if [[ ! "${ASTRA_DB_KEYSPACE}" =~ ^[A-Za-z0-9_]+$ ]]; then
+            echo "ERROR: Keyspace must be alphanumerics/underscore only." && exit 1
+          fi
 
       - name: Recreate Secure Connect Bundle
         shell: bash
@@ -40,8 +53,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Liquibase Cassandra extension uses the Cassandra JDBC wrapper (Astra tutorial)
-          # URL pattern uses SCB + token auth
           mvn -q -DskipTests liquibase:update \
             -Dliquibase.changeLogFile=liquibase/changelog.sql \
             -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
