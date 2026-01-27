@@ -66,14 +66,16 @@ jobs:
       - name: Liquibase update (apply changes)
         shell: bash
         env:
-            ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
-            ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
+          ASTRA_DB_KEYSPACE: ${{ secrets.ASTRA_DB_KEYSPACE }}
+          ASTRA_DB_TOKEN: ${{ secrets.ASTRA_DB_TOKEN }}
         run: |
-            set -euo pipefail
+          set -euo pipefail
 
-            mvn -B -e -DskipTests --no-transfer-progress liquibase:update \
-              -Dliquibase.changeLogFile=liquibase/changelog.sql \
-              -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
-              -Dliquibase.username=token \
-              -Dliquibase.password="${ASTRA_DB_TOKEN}" \
-              -Dliquibase.logLevel=info
+          mvn -B -e -DskipTests --no-transfer-progress liquibase:update \
+            -Dliquibase.changeLogFile=liquibase/changelog.sql \
+            -Dliquibase.url="jdbc:cassandra://dbaas/${ASTRA_DB_KEYSPACE}?secureconnectbundle=$(pwd)/.astra/secure-connect.zip&user=token&password=${ASTRA_DB_TOKEN}" \
+            -Dliquibase.username=token \
+            -Dliquibase.password="${ASTRA_DB_TOKEN}" \
+            -Dliquibase.logLevel=info \
+            -Dliquibase.cassandra.locking=false
+
