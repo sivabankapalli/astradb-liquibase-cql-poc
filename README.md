@@ -5,3 +5,4 @@ First iteration:
 <img width="1125" height="850" alt="image" src="https://github.com/user-attachments/assets/b588caf4-9cc6-439c-9fb2-c184e1c09fb3" />
 
 Second iteration:
+<img width="1482" height="731" alt="image" src="https://github.com/user-attachments/assets/82878a3a-588e-472c-af73-027bd2d305c0" />
