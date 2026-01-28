@@ -3,17 +3,22 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>poc</groupId>
   <artifactId>astradb-liquibase-cql-poc</artifactId>
   <version>1.0.0</version>
+
+  <!-- packaging=pom is OK if you only run the plugin -->
   <packaging>pom</packaging>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <!-- IMPORTANT: match core + cassandra extension versions -->
+    <liquibase.version>4.27.0</liquibase.version>
+
+    <!-- JDBC wrapper. Use a version you want; keep yours for now -->
+    <cassandra.jdbc.version>4.16.1</cassandra.jdbc.version>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <liquibase.version>4.31.0</liquibase.version>
-    <cassandra-jdbc.version>4.16.1</cassandra-jdbc.version>
   </properties>
 
   <dependencies>
@@ -24,33 +29,46 @@
       <version>${liquibase.version}</version>
     </dependency>
 
-    <!-- Cassandra JDBC Wrapper (Maven Central, Astra compatible) -->
+    <!-- Liquibase Cassandra Database implementation (THIS fixes current_schema issue) -->
+    <dependency>
+      <groupId>org.liquibase.ext</groupId>
+      <artifactId>liquibase-cassandra</artifactId>
+      <version>${liquibase.version}</version>
+    </dependency>
+
+    <!-- Cassandra JDBC wrapper -->
     <dependency>
       <groupId>com.ing.data</groupId>
       <artifactId>cassandra-jdbc-wrapper</artifactId>
-      <version>${cassandra-jdbc.version}</version>
+      <version>${cassandra.jdbc.version}</version>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-      </plugin>
-      <plugin>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-maven-plugin</artifactId>
         <version>${liquibase.version}</version>
+
         <configuration>
           <driver>com.ing.data.cassandra.jdbc.CassandraDriver</driver>
+          <!-- helps Liquibase not guess schema -->
+          <defaultSchemaName>${env.ASTRA_DB_KEYSPACE}</defaultSchemaName>
+          <liquibaseSchemaName>${env.ASTRA_DB_KEYSPACE}</liquibaseSchemaName>
         </configuration>
+
+        <!-- Put driver + extension on the plugin classpath -->
         <dependencies>
+          <dependency>
+            <groupId>org.liquibase.ext</groupId>
+            <artifactId>liquibase-cassandra</artifactId>
+            <version>${liquibase.version}</version>
+          </dependency>
           <dependency>
             <groupId>com.ing.data</groupId>
             <artifactId>cassandra-jdbc-wrapper</artifactId>
-            <version>${cassandra-jdbc.version}</version>
+            <version>${cassandra.jdbc.version}</version>
           </dependency>
         </dependencies>
       </plugin>
